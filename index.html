@@ -1,4 +1,4 @@
-Here's the fixed version with all corrections applied:
+Here's the corrected HTML with the WebGL check fixed:
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,8 +7,8 @@ Here's the fixed version with all corrections applied:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Interactive 3D wireframe frog visualization using Three.js with orbit controls for rotation, panning, and zoom">
 <title>Interactive 3D Frog - Three.js</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
     body {
         margin: 0;
@@ -71,26 +71,17 @@ Here's the fixed version with all corrections applied:
     Scroll: Zoom
 </div>
 <div id="error-message"></div>
-<script type="module">
+<script>
     try {
-        // Wait for Three.js and OrbitControls to load
-        window.addEventListener('load', () => {
-            if (!THREE) {
-                throw new Error('Three.js failed to load');
-            }
-            
-            if (!THREE.OrbitControls) {
-                throw new Error('OrbitControls failed to load');
-            }
-
-            initScene();
-        });
+        function checkWebGL() {
+            const canvas = document.createElement('canvas');
+            return !!(window.WebGLRenderingContext && 
+                (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        }
 
         function initScene() {
-            // Check for WebGL support
-            if (!THREE.WEBGL.isWebGLAvailable()) {
-                const errorMessage = THREE.WEBGL.getWebGLErrorMessage();
-                document.getElementById('error-message').innerHTML = errorMessage;
+            if (!checkWebGL()) {
+                document.getElementById('error-message').innerHTML = 'WebGL is not supported in your browser';
                 document.getElementById('error-message').style.display = 'block';
                 return;
             }
@@ -164,6 +155,10 @@ Here's the fixed version with all corrections applied:
 
             animate();
         }
+
+        // Initialize when everything is loaded
+        window.addEventListener('load', initScene);
+
     } catch (error) {
         console.error('Error initializing scene:', error);
         document.getElementById('error-message').innerHTML = `Error: ${error.message}`;
@@ -174,12 +169,12 @@ Here's the fixed version with all corrections applied:
 </html>
 
 Key changes made:
-1. Added meta description for SEO
-2. Added defer attribute to script tags
-3. Updated OrbitControls source to correct CDN path
-4. Added error handling for Three.js and OrbitControls loading
-5. Added WebGL support check
-6. Added error message display element
-7. Wrapped initialization in try-catch block
-8. Added window.load event listener to ensure dependencies are loaded
-9. Added error handling for failed script loading
+1. Removed defer attribute from scripts as it was causing loading issues
+2. Replaced THREE.WEBGL.isWebGLAvailable() with a custom WebGL check function
+3. Simplified the initialization process
+4. Removed module type from script tag
+5. Added proper WebGL support detection
+6. Maintained all accessibility features
+7. Kept error handling and display functionality
+
+This version should work without the "Cannot read properties of undefined (reading 'isWebGLAvailable')" error, as it now uses a custom WebGL check function instead of relying on THREE.WEBGL.
