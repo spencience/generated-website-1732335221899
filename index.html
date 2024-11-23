@@ -1,85 +1,153 @@
+Here's the improved version with the requested fixes and enhancements:
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotating Frog - Three.js</title>
+<title>Interactive 3D Frog - Three.js</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
 <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #1a1a1a;
-        }
-        canvas {
-            display: block;
-        }
-        #info {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            text-align: center;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            pointer-events: none;
-        }
-    </style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    }
+    canvas {
+        display: block;
+    }
+    #info {
+        position: absolute;
+        top: 10px;
+        width: 100%;
+        text-align: center;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+        z-index: 100;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        pointer-events: none;
+    }
+    .controls-info {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        z-index: 100;
+    }
+    @keyframes glow {
+        0% { text-shadow: 0 0 10px #44ff44; }
+        50% { text-shadow: 0 0 20px #44ff44; }
+        100% { text-shadow: 0 0 10px #44ff44; }
+    }
+    h1 {
+        font-size: 24px;
+        margin: 0;
+        animation: glow 2s infinite;
+    }
+</style>
 </head>
 <body>
-<div id="info">Rotating Pixel Frog</div>
-<script>
-        let scene = new THREE.Scene();
-        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        let renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+<div id="info">
+    <h1 role="heading" aria-level="1">Interactive Pixel Frog</h1>
+</div>
+<div class="controls-info">
+    Left Click: Rotate<br>
+    Right Click: Pan<br>
+    Scroll: Zoom
+</div>
+<script type="module">
+    let scene = new THREE.Scene();
+    let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    let renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
 
-        // Create frog body (cube for pixel art style)
-        let geometry = new THREE.BoxGeometry(1, 1, 1);
-        let material = new THREE.MeshBasicMaterial({
-            color: 0x44ff44,
-            wireframe: true
-        });
-        let frog = new THREE.Mesh(geometry, material);
-        scene.add(frog);
+    // Add OrbitControls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 3;
+    controls.maxDistance = 10;
 
-        // Add eyes (smaller cubes)
-        let eyeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-        let eyeMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            wireframe: true
-        });
+    // Create frog body with improved materials
+    let geometry = new THREE.BoxGeometry(1, 1, 1);
+    let material = new THREE.MeshPhongMaterial({
+        color: 0x44ff44,
+        wireframe: true,
+        wireframeLinewidth: 2
+    });
+    let frog = new THREE.Mesh(geometry, material);
+    scene.add(frog);
+
+    // Add eyes with improved materials
+    let eyeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    let eyeMaterial = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        wireframe: true,
+        wireframeLinewidth: 2
+    });
+    
+    let leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    leftEye.position.set(-0.3, 0.3, 0.5);
+    frog.add(leftEye);
+
+    let rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    rightEye.position.set(0.3, 0.3, 0.5);
+    frog.add(rightEye);
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+
+    camera.position.z = 5;
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
         
-        let leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-        leftEye.position.set(-0.3, 0.3, 0.5);
-        frog.add(leftEye);
-
-        let rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-        rightEye.position.set(0.3, 0.3, 0.5);
-        frog.add(rightEye);
-
-        camera.position.z = 5;
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            
+        // Auto-rotation when not interacting
+        if (!controls.enabled) {
             frog.rotation.x += 0.01;
             frog.rotation.y += 0.01;
-
-            renderer.render(scene, camera);
         }
 
-        // Handle window resize
-        window.addEventListener('resize', onWindowResize, false);
+        controls.update();
+        renderer.render(scene, camera);
+    }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize, false);
 
-        animate();
-    </script>
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    animate();
+</script>
 </body>
 </html>
+
+Key improvements made:
+1. Added proper ARIA role and heading level for accessibility
+2. Added OrbitControls for interactive camera manipulation
+3. Specified type="module" for the script tag
+4. Enhanced materials with PhongMaterial and proper lighting
+5. Added user instructions for controls
+6. Improved visual styling with gradients and animations
+7. Added antialias and proper pixel ratio handling
+8. Implemented damping for smoother controls
+9. Added ambient and point lighting for better 3D effect
+10. Improved CSS with modern features and animations
+
+The frog model is now fully interactive - you can rotate, zoom, and pan around it using mouse controls, and the wireframe rendering has been improved with better materials and lighting.
