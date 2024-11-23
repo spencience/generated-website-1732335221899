@@ -1,11 +1,14 @@
+Here's the fixed version with all corrections applied:
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Interactive 3D wireframe frog visualization using Three.js with orbit controls for rotation, panning, and zoom">
 <title>Interactive 3D Frog - Three.js</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
 <style>
     body {
         margin: 0;
@@ -45,6 +48,17 @@
         margin: 0;
         animation: glow 2s infinite;
     }
+    #error-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ff4444;
+        background: rgba(0,0,0,0.8);
+        padding: 20px;
+        border-radius: 5px;
+        display: none;
+    }
 </style>
 </head>
 <body>
@@ -56,75 +70,116 @@
     Right Click: Pan<br>
     Scroll: Zoom
 </div>
+<div id="error-message"></div>
 <script type="module">
-    let scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    let renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    document.body.appendChild(renderer.domElement);
+    try {
+        // Wait for Three.js and OrbitControls to load
+        window.addEventListener('load', () => {
+            if (!THREE) {
+                throw new Error('Three.js failed to load');
+            }
+            
+            if (!THREE.OrbitControls) {
+                throw new Error('OrbitControls failed to load');
+            }
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 3;
-    controls.maxDistance = 10;
+            initScene();
+        });
 
-    let geometry = new THREE.BoxGeometry(1, 1, 1);
-    let material = new THREE.MeshPhongMaterial({
-        color: 0x44ff44,
-        wireframe: true,
-        wireframeLinewidth: 2
-    });
-    let frog = new THREE.Mesh(geometry, material);
-    scene.add(frog);
+        function initScene() {
+            // Check for WebGL support
+            if (!THREE.WEBGL.isWebGLAvailable()) {
+                const errorMessage = THREE.WEBGL.getWebGLErrorMessage();
+                document.getElementById('error-message').innerHTML = errorMessage;
+                document.getElementById('error-message').style.display = 'block';
+                return;
+            }
 
-    let eyeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    let eyeMaterial = new THREE.MeshPhongMaterial({
-        color: 0xffffff,
-        wireframe: true,
-        wireframeLinewidth: 2
-    });
-    
-    let leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    leftEye.position.set(-0.3, 0.3, 0.5);
-    frog.add(leftEye);
+            let scene = new THREE.Scene();
+            let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            let renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
 
-    let rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    rightEye.position.set(0.3, 0.3, 0.5);
-    frog.add(rightEye);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 3;
+            controls.maxDistance = 10;
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+            let geometry = new THREE.BoxGeometry(1, 1, 1);
+            let material = new THREE.MeshPhongMaterial({
+                color: 0x44ff44,
+                wireframe: true,
+                wireframeLinewidth: 2
+            });
+            let frog = new THREE.Mesh(geometry, material);
+            scene.add(frog);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set(5, 5, 5);
-    scene.add(pointLight);
+            let eyeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+            let eyeMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                wireframe: true,
+                wireframeLinewidth: 2
+            });
+            
+            let leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.3, 0.3, 0.5);
+            frog.add(leftEye);
 
-    camera.position.z = 5;
+            let rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.3, 0.3, 0.5);
+            frog.add(rightEye);
 
-    function animate() {
-        requestAnimationFrame(animate);
-        
-        if (!controls.enabled) {
-            frog.rotation.x += 0.01;
-            frog.rotation.y += 0.01;
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (!controls.enabled) {
+                    frog.rotation.x += 0.01;
+                    frog.rotation.y += 0.01;
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            window.addEventListener('resize', onWindowResize, false);
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            animate();
         }
-
-        controls.update();
-        renderer.render(scene, camera);
+    } catch (error) {
+        console.error('Error initializing scene:', error);
+        document.getElementById('error-message').innerHTML = `Error: ${error.message}`;
+        document.getElementById('error-message').style.display = 'block';
     }
-
-    window.addEventListener('resize', onWindowResize, false);
-
-    function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    animate();
 </script>
 </body>
 </html>
+
+Key changes made:
+1. Added meta description for SEO
+2. Added defer attribute to script tags
+3. Updated OrbitControls source to correct CDN path
+4. Added error handling for Three.js and OrbitControls loading
+5. Added WebGL support check
+6. Added error message display element
+7. Wrapped initialization in try-catch block
+8. Added window.load event listener to ensure dependencies are loaded
+9. Added error handling for failed script loading
